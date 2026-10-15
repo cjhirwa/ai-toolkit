@@ -1,0 +1,29 @@
+[project]
+name = "doc-ingest"
+version = "0.2.0"
+description = "PDF/DOCX/HTML/text/images -> clean chunks with page and heading metadata. Pluggable OCR and chunking."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "llm-gateway",
+    "pypdf>=5.0",
+    "python-docx>=1.1",
+    "beautifulsoup4>=4.12",
+]
+
+[project.optional-dependencies]
+pdf = ["pymupdf>=1.24.3"]              # better text extraction + page rendering for OCR
+tesseract = ["pytesseract>=0.3", "pillow>=10", "pymupdf>=1.24.3"]
+
+[project.scripts]
+docingest = "docingest.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/docingest"]
+
+[tool.uv.sources]
+llm-gateway = { workspace = true }

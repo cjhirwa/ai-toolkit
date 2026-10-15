@@ -1,0 +1,24 @@
+[project]
+name = "mcp-servers"
+version = "0.2.0"
+description = "MCP servers exposing the toolkit (retrieval index, eval runs, prompt registry) to Claude Code, Claude Desktop and other agents."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["mcp>=2.0", "llm-gateway", "retrieval-kit", "eval-harness", "prompt-registry"]
+
+[project.scripts]
+mcp-retrieval = "toolkit_mcp.retrieval:main"
+mcp-evals = "toolkit_mcp.evals:main"
+mcp-prompts = "toolkit_mcp.prompts:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/toolkit_mcp"]
+
+[tool.uv.sources]
+retrieval-kit = { workspace = true }
+eval-harness = { workspace = true }
+prompt-registry = { workspace = true }

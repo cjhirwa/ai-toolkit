@@ -1,0 +1,82 @@
+[project]
+name = "ai-toolkit"
+version = "0.2.0"
+description = "Reusable building blocks for LLM projects: gateway, evals, prompts, ingestion, retrieval, extraction, agents, routing, MCP, synthetic data, visualisation, speech."
+requires-python = ">=3.11"
+dependencies = [
+    "llm-gateway[all]",
+    "eval-harness",
+    "prompt-registry",
+    "doc-ingest",
+    "retrieval-kit",
+    "structured-extract",
+    "mcp-servers",
+    "agent-loop",
+    "guardrails-router",
+    "playground",
+    "synth-data",
+    "embedding-viz",
+    "speech-tools",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6", "pip-audit>=2.7", "mypy>=1.11", "opentelemetry-sdk>=1.20"]
+
+[tool.uv.workspace]
+members = [
+    "llm-gateway",
+    "eval-harness",
+    "prompt-registry",
+    "doc-ingest",
+    "retrieval-kit",
+    "structured-extract",
+    "mcp-servers",
+    "agent-loop",
+    "guardrails-router",
+    "playground",
+    "synth-data",
+    "embedding-viz",
+    "speech-tools",
+]
+
+[tool.uv.sources]
+llm-gateway = { workspace = true }
+eval-harness = { workspace = true }
+prompt-registry = { workspace = true }
+doc-ingest = { workspace = true }
+retrieval-kit = { workspace = true }
+structured-extract = { workspace = true }
+mcp-servers = { workspace = true }
+agent-loop = { workspace = true }
+guardrails-router = { workspace = true }
+playground = { workspace = true }
+synth-data = { workspace = true }
+embedding-viz = { workspace = true }
+speech-tools = { workspace = true }
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib -q"
+testpaths = [
+    "llm-gateway/tests", "eval-harness/tests", "prompt-registry/tests", "doc-ingest/tests",
+    "retrieval-kit/tests", "structured-extract/tests", "mcp-servers/tests", "agent-loop/tests",
+    "guardrails-router/tests", "playground/tests", "synth-data/tests", "embedding-viz/tests",
+    "speech-tools/tests",
+]
+
+[tool.ruff]
+line-length = 130
+target-version = "py311"
+
+[tool.ruff.lint]
+# Real errors (E, F), likely bugs (B) and import order (I); style preferences are left out.
+select = ["E", "F", "B", "I"]
+ignore = ["E501", "E731", "E741", "B905"]  # line length, lambda assignment, `l` names, zip(strict=)
+
+[tool.ruff.lint.isort]
+known-first-party = ["llmgw", "evalh", "promptreg", "docingest", "retrievekit", "sextract", "toolkit_mcp",
+                     "agentloop", "qroute", "playground", "synthdata", "embviz", "speechkit"]
+
+[tool.mypy]
+# Core packages only (see README); experimental ones are not type-checked yet.
+files = ["llm-gateway/src", "doc-ingest/src", "retrieval-kit/src", "eval-harness/src", "guardrails-router/src"]
+ignore_missing_imports = true

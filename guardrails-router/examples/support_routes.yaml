@@ -1,0 +1,40 @@
+# Example routing config for a product-support assistant (a fictional thermostat maker, Acme).
+default_route: in_scope
+# If the embedding or LLM stage fails (provider down, rate limit), ask the customer to
+# clarify instead of answering on a guess. Safety words are caught by the rules below,
+# which do not depend on any model.
+error_route: needs_clarification
+instructions: |
+  Queries may be in English, French or Spanish. Judge the meaning, not the language.
+  Anything describing a safety hazard with a device right now is "urgent", even if phrased as a question.
+
+rules:
+  - pattern: '\b(smok\w*|burning smell|sparks?|electric shock|on fire|fumée|humo)\b'
+    route: urgent
+
+routes:
+  - name: in_scope
+    description: Questions about Acme products, orders, billing, installation, troubleshooting and warranty.
+    examples:
+      - How do I reset my thermostat to factory settings?
+      - What does error E4 mean?
+      - How long does a refund take?
+      - ¿Cómo cambio las pilas del termostato?
+  - name: urgent
+    description: A device is a safety hazard right now and the customer needs a human immediately.
+    examples:
+      - The thermostat is giving off smoke
+      - I got an electric shock from the wall plate
+      - There is a burning smell coming from the unit
+  - name: out_of_scope
+    description: Not about Acme products or orders - general chit-chat, other companies, politics, coding help.
+    examples:
+      - Can you recommend a good restaurant?
+      - Who won the football match?
+      - Write me a poem about the sea
+  - name: needs_clarification
+    description: Too vague to answer without more detail.
+    examples:
+      - It doesn't work
+      - Is it broken?
+      - help

@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ai-toolkit</title>
+<meta name="description" content="A toolkit of thirteen Python packages for LLM ingestion, retrieval, evaluation and routing, built so that failures are explicit, cost is bounded, logs are private and measurements can be trusted.">
+<meta property="og:title" content="ai-toolkit: LLM applications that fail predictably">
+<meta property="og:description" content="One model gateway for Gemini, OpenAI and Ollama with explicit failure semantics, shared rate limits and spending caps, private logs, and evaluation with confidence intervals.">
+<meta name="theme-color" content="#fbfaf7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f5fbf'/%3E%3Cpath d='M18 22h28M32 22v24' stroke='white' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fbfaf7;
+  --panel: #ffffff;
+  --panel-2: #f4f2ed;
+  --ink: #1a1e24;
+  --ink-2: #3a424d;
+  --muted: #5d6673;
+  --rule: #e4e0d7;
+  --rule-2: #d3cec2;
+  --accent: #1f5fbf;
+  --accent-soft: #e6eefa;
+  --ok: #0f7a5c;
+  --ok-soft: #e3f4ee;
+  --bad: #b3261e;
+  --bad-soft: #fbe9e7;
+  --warn: #8a5a00;
+  --code-bg: #f3f1ec;
+  --shadow: 0 1px 2px rgba(20, 24, 30, .05), 0 8px 24px rgba(20, 24, 30, .06);
+  --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1015;
+    --panel: #141920;
+    --panel-2: #1a2029;
+    --ink: #e7e9ec;
+    --ink-2: #c4cad2;
+    --muted: #96a0ad;
+    --rule: #252c36;
+    --rule-2: #333c48;
+    --accent: #78aeff;
+    --accent-soft: #16243a;
+    --ok: #45d19f;
+    --ok-soft: #10261f;
+    --bad: #ff7b72;
+    --bad-soft: #2c1513;
+    --warn: #e2b04a;
+    --code-bg: #161c24;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1015;
+  --panel: #141920;
+  --panel-2: #1a2029;
+  --ink: #e7e9ec;
+  --ink-2: #c4cad2;
+  --muted: #96a0ad;
+  --rule: #252c36;
+  --rule-2: #333c48;
+  --accent: #78aeff;
+  --accent-soft: #16243a;
+  --ok: #45d19f;
+  --ok-soft: #10261f;
+  --bad: #ff7b72;
+  --bad-soft: #2c1513;
+  --warn: #e2b04a;
+  --code-bg: #161c24;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+}
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code, kbd, .mono { font-family: var(--mono); font-size: .84em; }
+code { background: var(--code-bg); border: 1px solid var(--rule); padding: .08em .35em; border-radius: 5px; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 16px; top: 12px; z-index: 100; background: var(--panel); padding: 8px 12px; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: saturate(160%) blur(10px);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--sans);
+}
+.topbar-inner {
+  max-width: 1180px; margin: 0 auto; padding: 10px 16px;
+  display: flex; align-items: center; gap: 16px;
+}
+.brand { font-weight: 650; font-size: 15px; color: var(--ink); text-decoration: none; letter-spacing: -.01em; white-space: nowrap; }
+.brand span { color: var(--muted); font-weight: 500; }
+.topnav { display: flex; gap: 2px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+.topnav::-webkit-scrollbar { display: none; }
+.topnav a {
+  color: var(--muted); text-decoration: none; font-size: 13.5px; font-weight: 500;
+  padding: 6px 10px; border-radius: 7px; white-space: nowrap;
+}
+.topnav a:hover { color: var(--ink); background: var(--panel-2); }
+.icon-btn {
+  flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px;
+  border-radius: 8px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink);
+  cursor: pointer;
+}
+.icon-btn:hover { border-color: var(--rule-2); }
+.icon-btn svg { width: 17px; height: 17px; }
+@media (max-width: 860px) { .topnav { display: none; } .topbar-inner > .spacer { margin-left: auto; } }
+
+/* ---------- layout ---------- */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; }
+@media (min-width: 1180px) { .layout { grid-template-columns: 210px minmax(0, 1fr); } }
+.toc {
+  display: none; position: sticky; top: 76px; align-self: start;
+  font-family: var(--sans); font-size: 13px; padding-top: 8px;
+}
+@media (min-width: 1180px) { .toc { display: block; } }
+.toc p { margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+.toc a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; color: var(--muted); text-decoration: none; border-left: 2px solid transparent; line-height: 1.35; }
+.toc a:hover { color: var(--ink); }
+.toc a.active { color: var(--accent); border-left-color: var(--accent); }
+main { min-width: 0; }
+.prose { max-width: 760px; }
+.wide { max-width: 940px; }
+
+/* ---------- title block ---------- */
+.hero { padding: 64px 0 36px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+.kicker {
+  font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 18px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+.kicker .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--rule-2); }
+h1 {
+  font-family: var(--serif); font-weight: 700; font-size: clamp(32px, 5.2vw, 54px);
+  line-height: 1.08; letter-spacing: -.02em; margin: 0 0 20px; max-width: 920px;
+}
+.lede { font-size: clamp(18px, 2.2vw, 21px); color: var(--ink-2); max-width: 760px; margin: 0 0 26px; }
+.byline { font-family: var(--sans); font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.byline strong { color: var(--ink); font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; font-family: var(--sans); }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600;
+  padding: 10px 16px; border-radius: 9px; text-decoration: none; border: 1px solid var(--rule-2);
+  color: var(--ink); background: var(--panel);
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn svg { width: 16px; height: 16px; }
+
+.stats {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+  margin-top: 40px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel);
+  font-family: var(--sans); overflow: hidden;
+}
+.stat { padding: 18px 20px; border-right: 1px solid var(--rule); }
+.stat:last-child { border-right: 0; }
+.stat b { display: block; font-size: 26px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--muted); line-height: 1.4; display: block; margin-top: 2px; }
+@media (max-width: 720px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:nth-child(2) { border-right: 0; }
+  .stat:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+}
+
+/* ---------- paper sections ---------- */
+section { padding: 44px 0 8px; scroll-margin-top: 64px; }
+h2 {
+  font-family: var(--serif); font-size: clamp(25px, 3vw, 30px); line-height: 1.2; letter-spacing: -.01em;
+  margin: 0 0 18px; font-weight: 700;
+}
+h2 .num { font-family: var(--sans); font-size: .5em; font-weight: 600; color: var(--accent); letter-spacing: .08em; display: block; margin-bottom: 6px; }
+h3 { font-family: var(--serif); font-size: 21px; font-style: italic; font-weight: 600; margin: 32px 0 10px; }
+p { margin: 0 0 16px; }
+.prose p, .prose li { hyphens: auto; }
+ul, ol { padding-left: 1.3em; margin: 0 0 16px; }
+li { margin: 4px 0; }
+li::marker { color: var(--muted); }
+
+.abstract {
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 26px 28px;
+  box-shadow: var(--shadow); margin-top: 36px;
+}
+.abstract p { text-align: justify; margin: 0; }
+.abstract .label { font-weight: 700; font-style: italic; }
+.terms { margin-top: 14px; font-size: 16px; color: var(--ink-2); }
+.terms .label { font-weight: 700; font-style: italic; }
+
+.contrib { list-style: none; padding: 0; counter-reset: c; display: grid; gap: 10px; }
+.contrib li {
+  counter-increment: c; position: relative; padding: 14px 16px 14px 58px; margin: 0;
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 10px;
+}
+.contrib li::before {
+  content: "C" counter(c); position: absolute; left: 16px; top: 15px;
+  font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--accent);
+  background: var(--accent-soft); border-radius: 6px; padding: 1px 6px;
+}
+
+/* ---------- figures & tables ---------- */
+figure { margin: 30px 0; }
+.fig-frame {
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 20px;
+  overflow-x: auto; box-shadow: var(--shadow);
+}
+.fig-frame svg { display: block; width: 100%; height: auto; min-width: 640px; }
+figcaption { font-family: var(--sans); font-size: 13.5px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+figcaption b { color: var(--ink); font-weight: 600; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); margin: 22px 0 8px; }
+.table-cap { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: center; margin: 28px 0 0; }
+.table-cap span { display: block; text-transform: none; letter-spacing: 0; font-size: 13.5px; font-weight: 500; color: var(--ink-2); margin-top: 2px; }
+table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+th, td { text-align: left; padding: 11px 14px; vertical-align: top; border-bottom: 1px solid var(--rule); }
+th { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--panel-2); }
+tr:last-child td { border-bottom: 0; }
+td code { font-size: .86em; }
+.pill { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.pill.ok { color: var(--ok); background: var(--ok-soft); }
+.pill.bad { color: var(--bad); background: var(--bad-soft); }
+.pill.neutral { color: var(--accent); background: var(--accent-soft); }
+
+/* SVG diagram styling */
+.d-node { fill: var(--panel); stroke: var(--rule-2); stroke-width: 1.4; }
+.d-agent { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+.d-check { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.6; }
+.d-store { fill: var(--panel-2); stroke: var(--rule-2); stroke-width: 1.4; }
+.d-title { font-family: var(--sans); font-size: 15px; font-weight: 650; fill: var(--ink); }
+.d-sub { font-family: var(--sans); font-size: 11.5px; fill: var(--muted); }
+.d-label { font-family: var(--sans); font-size: 11.5px; font-weight: 500; fill: var(--muted); }
+.d-label-accent { font-family: var(--sans); font-size: 11.5px; font-weight: 600; fill: var(--accent); }
+.d-edge { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.d-edge-accent { stroke: var(--accent); stroke-width: 1.7; fill: none; stroke-dasharray: 6 5; }
+.d-flow { stroke: var(--accent); stroke-width: 1.7; fill: none; stroke-dasharray: 6 5; animation: flow 1.2s linear infinite; }
+.d-zone { fill: none; stroke: var(--rule-2); stroke-dasharray: 4 4; stroke-width: 1.2; }
+.d-zone-label { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: .08em; fill: var(--muted); text-transform: uppercase; }
+.arrow-head { fill: var(--muted); }
+.arrow-head-accent { fill: var(--accent); }
+@keyframes flow { to { stroke-dashoffset: -22; } }
+@media (prefers-reduced-motion: reduce) { .d-flow { animation: none; } }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--sans); font-size: 12.5px; color: var(--muted); margin-top: 14px; }
+.legend i { display: inline-block; width: 14px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; border: 1.5px solid; }
+
+/* cascade */
+.cascade { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; counter-reset: s; font-family: var(--sans); }
+.cascade li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr auto; gap: 14px; align-items: start; padding: 14px 0; border-bottom: 1px dashed var(--rule); margin: 0; }
+.cascade li:last-child { border-bottom: 0; }
+.cascade li::before {
+  content: counter(s); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 13px; font-weight: 650; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent);
+}
+.cascade li.fallback::before { content: "↓"; color: var(--warn); background: transparent; border-color: var(--warn); border-style: dashed; }
+.cascade b { display: block; font-size: 15px; font-weight: 600; }
+.cascade span { font-size: 13.5px; color: var(--muted); line-height: 1.45; display: block; }
+.cascade em { font-style: normal; font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; padding-top: 4px; }
+@media (max-width: 560px) { .cascade li { grid-template-columns: 34px 1fr; } .cascade em { grid-column: 2; padding-top: 0; } }
+
+/* math & algorithm */
+.def {
+  border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 10px 10px 0;
+  padding: 16px 20px; margin: 20px 0; border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+}
+.def .label { font-weight: 700; font-style: normal; }
+.m { font-family: var(--serif); font-style: italic; white-space: nowrap; }
+.m sub, .m sup { font-style: normal; font-size: .72em; }
+.eq { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 16px 0; padding: 4px 0; overflow-x: auto; }
+.eq .body { font-family: var(--serif); font-size: 19px; font-style: italic; white-space: nowrap; }
+.eq .tag { font-family: var(--serif); color: var(--muted); font-style: normal; }
+.rules { list-style: none; padding: 0; display: grid; gap: 10px; }
+.rules li { display: grid; grid-template-columns: 44px 1fr; gap: 10px; margin: 0; }
+.rules .r { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--accent); padding-top: 3px; }
+
+.algo { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin: 26px 0; box-shadow: var(--shadow); }
+.algo-head { font-family: var(--sans); font-size: 13.5px; padding: 10px 16px; border-bottom: 1px solid var(--rule); background: var(--panel-2); }
+.algo-head b { font-weight: 650; }
+.algo pre { margin: 0; padding: 16px 0; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.7; counter-reset: ln; }
+.algo pre span.l { display: block; padding: 0 18px 0 0; white-space: pre; }
+.algo pre span.l::before { counter-increment: ln; content: counter(ln); display: inline-block; width: 38px; padding-right: 14px; text-align: right; color: var(--rule-2); user-select: none; }
+.kw { color: var(--accent); font-weight: 500; }
+.cm { color: var(--muted); font-style: italic; }
+.ok-t { color: var(--ok); font-weight: 500; }
+.bad-t { color: var(--bad); font-weight: 500; }
+
+/* demo */
+.demo { background: var(--panel); border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow); margin: 30px 0; overflow: hidden; font-family: var(--sans); }
+.demo-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--rule); background: var(--panel-2); flex-wrap: wrap; }
+.demo-head h4 { margin: 0; font-size: 14.5px; font-weight: 650; }
+.demo-head p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ok); }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+.demo-body { padding: 18px; display: grid; gap: 16px; }
+.demo label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.demo textarea {
+  width: 100%; resize: vertical; font-family: var(--mono); font-size: 13px; line-height: 1.6;
+  color: var(--ink); background: var(--code-bg); border: 1px solid var(--rule); border-radius: 9px; padding: 12px;
+}
+.demo textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-family: var(--sans); font-size: 12.5px; font-weight: 500; padding: 6px 11px; border-radius: 99px;
+  border: 1px solid var(--rule-2); background: var(--panel); color: var(--ink-2); cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.verdict { border-radius: 10px; padding: 14px 16px; border: 1px solid var(--rule); display: grid; gap: 8px; }
+.verdict.ok { background: var(--ok-soft); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.verdict.bad { background: var(--bad-soft); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.verdict-title { font-weight: 650; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.verdict.ok .verdict-title { color: var(--ok); }
+.verdict.bad .verdict-title { color: var(--bad); }
+.verdict ol { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-2); }
+.verdict code { font-size: 11.5px; word-break: break-all; }
+.demo-foot { font-size: 12.5px; color: var(--muted); padding: 12px 18px; border-top: 1px solid var(--rule); }
+
+/* grids */
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
+@media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; }
+.card h4 { font-family: var(--sans); font-size: 14.5px; font-weight: 650; margin: 0 0 6px; }
+.card p, .card li { font-family: var(--sans); font-size: 14px; color: var(--ink-2); line-height: 1.55; }
+.card p:last-child { margin: 0; }
+.card ul { margin: 0; padding-left: 18px; }
+
+.stack { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 22px 0; font-family: var(--sans); }
+.stack div { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }
+.stack b { display: block; font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.stack span { font-size: 14px; color: var(--ink); line-height: 1.5; }
+
+.note { font-family: var(--sans); font-size: 14px; color: var(--ink-2); background: var(--panel-2); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 16px; margin: 18px 0; }
+.note b { color: var(--ink); }
+
+.refs { list-style: none; padding: 0; font-size: 15.5px; counter-reset: r; }
+.refs li { counter-increment: r; display: grid; grid-template-columns: 40px 1fr; margin: 0 0 10px; }
+.refs li::before { content: "[" counter(r) "]"; color: var(--muted); }
+.cite { font-family: var(--serif); text-decoration: none; }
+
+footer { border-top: 1px solid var(--rule); margin-top: 56px; padding: 28px 0 48px; font-family: var(--sans); font-size: 13.5px; color: var(--muted); }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+
+@media (max-width: 560px) {
+  body { font-size: 17px; }
+  .hero { padding-top: 40px; }
+  .abstract { padding: 20px; }
+  .demo-body { padding: 14px; }
+  .prose p, .abstract p { text-align: left; }
+}
+@media print {
+  .topbar, .toc, .actions, .demo { display: none; }
+  body { background: #fff; }
+}
+
+.stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 720px) {
+  .stats.three { grid-template-columns: 1fr; }
+  .stats.three .stat { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .stats.three .stat:last-child { border-bottom: 0; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">ai-toolkit <span>/ LLM building blocks</span></a>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#architecture">Architecture</a>
+      <a href="#failures">Failures</a>
+      <a href="#cost">Cost</a>
+      <a href="#measurement">Measurement</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#practice">Practice</a>
+    </nav>
+    <span class="spacer"></span>
+    <button class="icon-btn" id="theme" type="button" aria-label="Toggle dark mode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+  <div class="hero">
+    <h1>Engineering LLM Applications that Fail Predictably: A Toolkit for Ingestion, Retrieval, Evaluation and Routing</h1>
+    <p class="lede">Thirteen Python packages for ingestion, retrieval, evaluation and routing that share one model gateway, so failures surface, spending stays bounded, logs stay private and measurements can be trusted.</p>
+    <div class="byline">
+      <span>By <strong><a href="https://github.com/cjhirwa">cjhirwa</a></strong></span>
+      <span>2025</span>
+      <span>Python · uv · Gemini, OpenAI &amp; Ollama · OpenTelemetry</span>
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="https://github.com/cjhirwa/ai-toolkit">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.58.23 2.75.11 3.04.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+        Source code
+      </a>
+      <a class="btn" href="#failures">Read the design</a>
+    </div>
+    <div class="stats three" role="list">
+      <div class="stat" role="listitem"><b>13</b><span>packages in one uv workspace, each installable on its own</span></div>
+      <div class="stat" role="listitem"><b>1 → 3</b><span>one gateway for Gemini, OpenAI and local Ollama models</span></div>
+      <div class="stat" role="listitem"><b>4</b><span>CI gates: tests, ruff, mypy and pip-audit</span></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Contents">
+      <p>Contents</p>
+      <ol>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#introduction">I. Introduction</a></li>
+        <li><a href="#architecture">II. Architecture</a></li>
+        <li><a href="#failures">III. Failure semantics</a></li>
+        <li><a href="#cost">IV. Cost and concurrency</a></li>
+        <li><a href="#measurement">V. Measurement</a></li>
+        <li><a href="#independence">VI. Model independence</a></li>
+        <li><a href="#privacy">VII. Privacy and security</a></li>
+        <li><a href="#practice">VIII. Engineering practice</a></li>
+        <li><a href="#limitations">IX. Limitations</a></li>
+        <li><a href="#stack">X. Implementation</a></li>
+        <li><a href="#references">References</a></li>
+      </ol>
+    </nav>
+
+    <main id="main">
+      <!-- ============ OVERVIEW ============ -->
+      <section id="overview" class="prose" style="padding-top:28px">
+        <div class="abstract">
+          <p><span class="label">Overview</span>—Most LLM tooling is written for the happy path, yet production systems meet rate limits, provider outages, scanned documents, interrupted jobs, confidential data and unbounded bills. This toolkit covers document ingestion, retrieval, evaluation, query routing and agents, and routes every model call through one gateway that owns failures, cost, privacy and tracing. Failures are explicit rather than silently absorbed, spending is bounded, logs are private by default, and evaluation results come with confidence intervals and survive crashes.</p>
+        </div>
+      </section>
+
+      <!-- ============ I. INTRODUCTION ============ -->
+      <section id="introduction" class="prose">
+        <h2><span class="num">I</span>Introduction</h2>
+        <p>An LLM application is a distributed system built around an unreliable, metered and non-deterministic dependency. Common defaults treat that dependency as an ordinary function call: retry anything, switch models when one fails, average whatever scores come back. Each default is reasonable on its own. Together they produce systems that look healthy while answering from the wrong model, losing data and overstating improvements.</p>
+        <p>This project takes the opposite position: a failure should be visible, bounded and attributable. Rather than a framework, it is a set of small packages with explicit contracts that share one gateway, so the rules for failure, cost and privacy are written once and apply everywhere.</p>
+      </section>
+
+      <!-- ============ II. ARCHITECTURE ============ -->
+      <section id="architecture">
+        <div class="prose">
+          <h2><span class="num">II</span>Architecture</h2>
+          <p>The packages form three stages (Fig. 1). <em>Build</em> turns documents into a searchable index, <em>Serve</em> routes and answers user queries, and <em>Measure</em> generates test questions, benchmarks retrieval and scores answers. No component calls a model provider directly; every call goes through the gateway.</p>
+        </div>
+        <figure class="wide">
+          <div class="fig-frame">
+            <svg viewBox="0 0 1000 450" role="img" aria-labelledby="f1t">
+              <title id="f1t">Architecture: build, serve and measure stages, with every model call routed through llm-gateway to Gemini, OpenAI or Ollama</title>
+              <defs>
+                <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow-head"/></marker>
+                <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow-head-accent"/></marker>
+              </defs>
+
+              <!-- zones -->
+              <rect class="d-zone" x="20" y="24" width="470" height="150" rx="12"/>
+              <text class="d-zone-label" x="36" y="46">Build</text>
+              <rect class="d-zone" x="510" y="24" width="470" height="150" rx="12"/>
+              <text class="d-zone-label" x="526" y="46">Serve</text>
+              <rect class="d-zone" x="170" y="214" width="560" height="134" rx="12"/>
+              <text class="d-zone-label" x="186" y="236">Measure</text>
+
+              <!-- build -->
+              <rect class="d-node" x="40" y="78" width="130" height="58" rx="10"/>
+              <text class="d-title" x="105" y="103" text-anchor="middle">Documents</text>
+              <text class="d-sub" x="105" y="121" text-anchor="middle">PDF · DOCX · scans</text>
+              <rect class="d-agent" x="190" y="78" width="130" height="58" rx="10"/>
+              <text class="d-title" x="255" y="103" text-anchor="middle">doc-ingest</text>
+              <text class="d-sub" x="255" y="121" text-anchor="middle">chunks · OCR</text>
+              <rect class="d-agent" x="340" y="78" width="130" height="58" rx="10"/>
+              <text class="d-title" x="405" y="103" text-anchor="middle">retrieval-kit</text>
+              <text class="d-sub" x="405" y="121" text-anchor="middle">BM25 · dense · hybrid</text>
+
+              <!-- serve (flows right to left) -->
+              <rect class="d-agent" x="530" y="78" width="130" height="58" rx="10"/>
+              <text class="d-title" x="595" y="103" text-anchor="middle">RAG app</text>
+              <text class="d-sub" x="595" y="121" text-anchor="middle">agent-loop · MCP</text>
+              <rect class="d-agent" x="680" y="78" width="130" height="58" rx="10"/>
+              <text class="d-title" x="745" y="103" text-anchor="middle">router</text>
+              <text class="d-sub" x="745" y="121" text-anchor="middle">rules · embed · LLM</text>
+              <rect class="d-node" x="830" y="78" width="130" height="58" rx="10"/>
+              <text class="d-title" x="895" y="103" text-anchor="middle">User query</text>
+              <text class="d-sub" x="895" y="121" text-anchor="middle">any language</text>
+
+              <!-- measure -->
+              <rect class="d-agent" x="190" y="262" width="130" height="58" rx="10"/>
+              <text class="d-title" x="255" y="287" text-anchor="middle">synth-data</text>
+              <text class="d-sub" x="255" y="305" text-anchor="middle">questions · labels</text>
+              <rect class="d-node" x="340" y="262" width="130" height="58" rx="10"/>
+              <text class="d-title" x="405" y="287" text-anchor="middle">benchmark</text>
+              <text class="d-sub" x="405" y="305" text-anchor="middle">recall · MRR · nDCG</text>
+              <rect class="d-agent" x="560" y="262" width="150" height="58" rx="10"/>
+              <text class="d-title" x="635" y="287" text-anchor="middle">eval-harness</text>
+              <text class="d-sub" x="635" y="305" text-anchor="middle">judges · CIs · resume</text>
+
+              <!-- gateway and providers -->
+              <rect class="d-check" x="40" y="380" width="760" height="54" rx="10"/>
+              <text class="d-title" x="420" y="403" text-anchor="middle">llm-gateway</text>
+              <text class="d-sub" x="420" y="422" text-anchor="middle">timeouts · retries · rate limits · spending caps · caches · cost logs · tracing</text>
+              <rect class="d-store" x="820" y="380" width="160" height="54" rx="10"/>
+              <text class="d-title" x="900" y="403" text-anchor="middle">Providers</text>
+              <text class="d-sub" x="900" y="422" text-anchor="middle">Gemini · OpenAI · Ollama</text>
+
+              <!-- data flow -->
+              <path class="d-edge" d="M170 107H184" marker-end="url(#ah)"/>
+              <path class="d-edge" d="M320 107H334" marker-end="url(#ah)"/>
+              <path class="d-edge" d="M470 107H524" marker-end="url(#ah)"/>
+              <text class="d-label" x="497" y="99" text-anchor="middle">index</text>
+              <path class="d-edge" d="M830 107H816" marker-end="url(#ah)"/>
+              <path class="d-edge" d="M680 107H666" marker-end="url(#ah)"/>
+              <path class="d-edge" d="M255 136V256" marker-end="url(#ah)"/>
+              <text class="d-label" x="263" y="200">chunks</text>
+              <path class="d-edge" d="M405 136V256" marker-end="url(#ah)"/>
+              <text class="d-label" x="413" y="200">index</text>
+              <path class="d-edge" d="M320 291H334" marker-end="url(#ah)"/>
+              <path class="d-edge" d="M595 136V256" marker-end="url(#ah)"/>
+              <text class="d-label" x="603" y="200">answers</text>
+              <path class="d-edge" d="M255 320V334H635V326" marker-end="url(#ah)"/>
+              <text class="d-label" x="520" y="330" text-anchor="middle">test questions</text>
+
+              <!-- every model call goes through the gateway -->
+              <path class="d-edge-accent" d="M95 174V374" marker-end="url(#aha)"/>
+              <text class="d-label-accent" x="103" y="198">OCR · embeddings</text>
+              <path class="d-edge-accent" d="M450 348V374" marker-end="url(#aha)"/>
+              <text class="d-label-accent" x="458" y="366">generation · judges</text>
+              <path class="d-edge-accent" d="M780 174V374" marker-end="url(#aha)"/>
+              <text class="d-label-accent" x="788" y="290">routing · answers</text>
+              <path class="d-flow" d="M800 407H814" marker-end="url(#aha)"/>
+            </svg>
+          </div>
+          <figcaption><b>Fig. 1.</b> Three stages share one gateway. Solid arrows carry data; dashed arrows are model calls.</figcaption>
+          <div class="legend">
+            <span><i style="background:var(--accent-soft);border-color:var(--accent)"></i>calls a model (through the gateway)</span>
+            <span><i style="background:var(--panel);border-color:var(--rule-2)"></i>deterministic code</span>
+            <span><i style="background:var(--ok-soft);border-color:var(--ok)"></i>gateway: the single path to providers</span>
+          </div>
+        </figure>
+
+        <p class="table-cap">Table I<span>Packages</span></p>
+        <div class="table-wrap wide">
+          <table>
+            <thead><tr><th>Package</th><th>Responsibility</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><b>llm-gateway</b></td><td>One client for Gemini, OpenAI and Ollama, with failure handling, limits, spending caps, caching, cost accounting and tracing</td><td><span class="pill neutral">core</span></td></tr>
+              <tr><td><b>doc-ingest</b></td><td>PDF, DOCX, HTML and scans into chunks with page, section and OCR metadata</td><td><span class="pill neutral">core</span></td></tr>
+              <tr><td><b>retrieval-kit</b></td><td>Lexical, dense and hybrid retrieval, rerankers and benchmarks</td><td><span class="pill neutral">core</span></td></tr>
+              <tr><td><b>eval-harness</b></td><td>Rule-based metrics and LLM judges, run comparisons with confidence intervals</td><td><span class="pill neutral">core</span></td></tr>
+              <tr><td><b>guardrails-router</b></td><td>Query routing through rules, then embeddings, then an LLM</td><td><span class="pill neutral">core</span></td></tr>
+              <tr><td>eight more</td><td>Test-set generation, prompt versioning, schema extraction, a tool-calling agent, MCP access, a model playground, corpus maps, speech</td><td><span class="pill ok">experimental</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ III. FAILURE SEMANTICS ============ -->
+      <section id="failures">
+        <div class="prose">
+          <h2><span class="num">III</span>Failure Semantics</h2>
+          <p>The gateway decides what happens when a call fails, once and the same way for every package (Fig. 2). Only transient failures (throttling, server errors, timeouts, dropped connections) are retried or passed to a fallback model; a bad request or an authentication error surfaces immediately, because answering from another model would hide it. A reply cut off at the token limit is reported as truncated rather than treated as an answer. In ingestion, a page that cannot be read is skipped on its own instead of taking its document with it. The query router sends a query it cannot classify to a cautious route, such as asking for clarification, never to the normal answer path.</p>
+        </div>
+        <figure class="prose">
+          <div class="fig-frame" style="padding:8px 22px">
+            <ol class="cascade">
+              <li><div><b>Cache lookup</b><span>An identical earlier request is answered from the cache at no cost.</span></div><em>free</em></li>
+              <li><div><b>Spending check</b><span>The call is refused if the client's or the day's budget is spent.</span></div><em>caps</em></li>
+              <li><div><b>Provider slot</b><span>The call waits for the provider's shared rate and concurrency budget.</span></div><em>limits</em></li>
+              <li><div><b>Call with a timeout</b><span>No call can hang indefinitely.</span></div><em>always</em></li>
+              <li><div><b>Retry transient failures</b><span>Throttling, server errors and dropped connections, honouring the provider's requested delay.</span></div><em>backoff</em></li>
+              <li class="fallback"><div><b>Fall back to another model</b><span>Only for transient failures; other errors surface.</span></div><em>optional</em></li>
+              <li><div><b>Account and record</b><span>Cost from token counts, a metadata-only log entry and a trace span.</span></div><em>always</em></li>
+            </ol>
+          </div>
+          <figcaption><b>Fig. 2.</b> The path of one model call through the gateway.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ============ IV. COST AND CONCURRENCY ============ -->
+      <section id="cost" class="prose">
+        <h2><span class="num">IV</span>Cost and Concurrency</h2>
+        <p>Every concurrent job in a process (evaluation, OCR, batch generation) draws from one shared rate and concurrency budget per provider, instead of each backing off on its own after being throttled. Spending can be capped per client and per day, and the daily cap holds across separate processes because it is computed from the shared call log. Work that has been paid for once is not paid for again: embeddings and OCR results are cached by content, so rebuilding an index or re-ingesting a document reuses earlier results (Table II).</p>
+      </section>
+
+      <!-- ============ V. MEASUREMENT ============ -->
+      <section id="measurement" class="prose">
+        <h2><span class="num">V</span>Measurement</h2>
+        <p>An evaluation tool that misleads is worse than none, so each run is built to be reproducible and comparable. Examples are identified by their content rather than their position, so editing a dataset never mismatches results. Two runs are compared with paired bootstrap confidence intervals <a class="cite" href="#references">[3]</a>, and a change is reported as significant only when its interval excludes zero. Results are saved as they are produced, so an interrupted run resumes where it stopped, and every run records the models, data and code version that produced it. Retrieval labels are stored as positions in the source document rather than chunk identifiers, so different chunking strategies can be compared against the same labels.</p>
+      </section>
+
+      <!-- ============ VI. MODEL INDEPENDENCE ============ -->
+      <section id="independence" class="prose">
+        <h2><span class="num">VI</span>Model Independence</h2>
+        <p>Behaviour should not change silently when a different model is configured. Similarity scores differ between embedding models, so a fixed routing threshold would route the same query differently under each one; the router therefore calibrates its threshold from its own examples. PDFs carry no section markup, so the ingester recovers section headings from typography (font size and weight), giving chunks from PDFs the same section context as those from DOCX or HTML.</p>
+      </section>
+
+      <!-- ============ VII. PRIVACY AND SECURITY ============ -->
+      <section id="privacy">
+        <div class="prose">
+          <h2><span class="num">VII</span>Privacy and Security</h2>
+        </div>
+        <div class="grid2 wide">
+          <div class="card"><h4>Private by default</h4><p>Logs record metadata such as model, tokens, cost and latency. Prompts and replies are kept only when explicitly enabled, and caches store no document text.</p></div>
+          <div class="card"><h4>Untrusted documents</h4><p>Retrieved passages are fenced off in prompts and marked as reference material, limiting indirect prompt injection <a class="cite" href="#references">[4]</a>.</p></div>
+          <div class="card"><h4>Authenticated services</h4><p>Network-facing MCP servers <a class="cite" href="#references">[6]</a> require a token and refuse to serve beyond the local machine without one.</p></div>
+          <div class="card"><h4>Contained configuration</h4><p>Settings are read only from within the project, and ingestion limits file sizes and page counts.</p></div>
+        </div>
+      </section>
+
+      <!-- ============ VIII. ENGINEERING PRACTICE ============ -->
+      <section id="practice">
+        <div class="prose">
+          <h2><span class="num">VIII</span>Engineering Practice</h2>
+          <p>The test suite runs offline against a simulated provider, and contract tests check each provider adapter against the SDK's own response types. Continuous integration runs the tests on Linux and Windows together with linting, type checking and a dependency vulnerability audit, and a daily job makes real provider calls. Every model call emits an OpenTelemetry span <a class="cite" href="#references">[5]</a> with its tokens, cost, retries and errors. Releases follow semantic versioning.</p>
+        </div>
+        <p class="table-cap">Table II<span>Measured effects of engineering changes</span></p>
+        <div class="table-wrap wide">
+          <table>
+            <thead><tr><th>Change</th><th>Before</th><th>After</th><th>Measured on</th></tr></thead>
+            <tbody>
+              <tr><td><b>Embedding cache</b></td><td>58 s</td><td>1 s</td><td>rebuilding a 2,156-chunk index</td></tr>
+              <tr><td><b>OCR cache</b></td><td>41 s</td><td>3 s</td><td>re-ingesting a scanned book, identical output</td></tr>
+              <tr><td><b>Vectorised filters</b></td><td>73 ms</td><td>27 ms</td><td>filtered search over 200,000 chunks</td></tr>
+              <tr><td><b>PDF section headings</b></td><td>17</td><td>1,840</td><td>chunks with a section path, of about 2,160</td></tr>
+              <tr><td><b>Page-level failure isolation</b></td><td>document lost</td><td>one page skipped</td><td>a provider error on one page of 279</td></tr>
+              <tr><td><b>Calibrated routing threshold</b></td><td>0.80 fixed</td><td>0.59 / 0.66</td><td>two embedding models (nomic, Gemini)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ IX. LIMITATIONS ============ -->
+      <section id="limitations" class="prose">
+        <h2><span class="num">IX</span>Limitations</h2>
+        <ul>
+          <li>Answer quality has not yet been measured on a human-reviewed test set; the results above concern engineering behaviour.</li>
+          <li>Section-heading recovery is heuristic and may need tuning for unusual PDF layouts.</li>
+          <li>Dense retrieval runs in memory, which suits corpora up to a few hundred thousand chunks.</li>
+        </ul>
+      </section>
+
+      <!-- ============ X. IMPLEMENTATION ============ -->
+      <section id="stack">
+        <div class="prose">
+          <h2><span class="num">X</span>Implementation</h2>
+          <p>About 7,000 lines of Python in thirteen packages, released under the MIT licence.</p>
+        </div>
+        <div class="stack wide">
+          <div><b>Language and build</b><span>Python 3.11+, uv workspace <a class="cite" href="#references">[7]</a></span></div>
+          <div><b>Models</b><span>Google GenAI and OpenAI SDKs, Ollama, Pydantic</span></div>
+          <div><b>Retrieval</b><span>BM25 <a class="cite" href="#references">[1]</a>, dense search, reciprocal rank fusion <a class="cite" href="#references">[2]</a></span></div>
+          <div><b>Ingestion</b><span>PyMuPDF, pypdf, python-docx, BeautifulSoup</span></div>
+          <div><b>Evaluation</b><span>SQLite run store, LLM judges, bootstrap statistics</span></div>
+          <div><b>Quality</b><span>pytest, ruff, mypy, pip-audit, GitHub Actions</span></div>
+        </div>
+      </section>
+
+      <!-- ============ REFERENCES ============ -->
+      <section id="references" class="prose">
+        <h2>References</h2>
+        <ol class="refs">
+          <li><span>S. Robertson and H. Zaragoza, “The probabilistic relevance framework: BM25 and beyond,” <i>Foundations and Trends in Information Retrieval</i>, vol. 3, no. 4, pp. 333–389, 2009.</span></li>
+          <li><span>G. V. Cormack, C. L. A. Clarke, and S. Büttcher, “Reciprocal rank fusion outperforms Condorcet and individual rank learning methods,” in <i>Proc. 32nd ACM SIGIR Conference</i>, 2009, pp. 758–759.</span></li>
+          <li><span>B. Efron and R. J. Tibshirani, <i>An Introduction to the Bootstrap</i>. New York: Chapman &amp; Hall, 1993.</span></li>
+          <li><span>K. Greshake, S. Abdelnabi, S. Mishra, C. Endres, T. Holz, and M. Fritz, “Not what you’ve signed up for: Compromising real-world LLM-integrated applications with indirect prompt injection,” in <i>Proc. 16th ACM Workshop on Artificial Intelligence and Security (AISec)</i>, 2023.</span></li>
+          <li><span>OpenTelemetry, “Semantic conventions for generative AI systems.” [Online]. Available: <a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/">opentelemetry.io/docs/specs/semconv/gen-ai</a></span></li>
+          <li><span>“Model Context Protocol specification.” [Online]. Available: <a href="https://modelcontextprotocol.io">modelcontextprotocol.io</a></span></li>
+          <li><span>Astral, “uv: An extremely fast Python package and project manager.” [Online]. Available: <a href="https://github.com/astral-sh/uv">github.com/astral-sh/uv</a></span></li>
+        </ol>
+      </section>
+    </main>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>ai-toolkit · MIT License</span>
+    <span><a href="https://github.com/cjhirwa/ai-toolkit">github.com/cjhirwa/ai-toolkit</a></span>
+  </div>
+</footer>
+
+<script>
+/* ---------- theme ---------- */
+(function () {
+  const root = document.documentElement;
+  let saved = null;
+  try { saved = localStorage.getItem("theme"); } catch (e) {}
+  if (saved === "light" || saved === "dark") root.dataset.theme = saved;
+  document.getElementById("theme").addEventListener("click", function () {
+    const dark = root.dataset.theme
+      ? root.dataset.theme === "dark"
+      : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+  });
+})();
+
+/* ---------- table of contents highlight ---------- */
+(function () {
+  const links = Array.from(document.querySelectorAll(".toc a"));
+  if (!("IntersectionObserver" in window) || !links.length) return;
+  const byId = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        links.forEach((a) => a.classList.remove("active"));
+        const link = byId.get(e.target.id);
+        if (link) link.classList.add("active");
+      }
+    });
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  byId.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
+})();
+</script>
+</body>
+</html>

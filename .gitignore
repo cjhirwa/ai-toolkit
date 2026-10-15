@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.env
+.vscode/
+
+# runtime outputs
+.llmgw/
+.agentloop/
+.playground/
+evals.db
+data/
+*.html
+!*/templates/*.html
+
+# your documents (DOCS_DIR); docs/index.html is the GitHub Pages site
+docs/*
+!docs/index.html
